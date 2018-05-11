@@ -1,12 +1,13 @@
 import sys
 import socket
 import select
+import battleshipBoard
 
 HOST = ''
 RECV_BUFFER = 4096
 PORT = 9009
 
-def chat_server():
+def server():
     try:
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -20,6 +21,10 @@ def chat_server():
         client_socket, addr = server_socket.accept()
         print("Client " + str(addr) + " connected")
         socket_list = [sys.stdin, client_socket]
+
+        clientBoard = battleshipBoard.Board()
+        localBoard = battleshipBoard.Board()
+        localBoard.initShips("ready")
 
         while True:
 
@@ -35,18 +40,42 @@ def chat_server():
                     if not data:
                         print('\nDisconnected from server')
                         sys.exit()
-                    else:
+                    else:       #ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT
                         # print data
+                        readableData = data.decode("utf-8")[0:-1]
+                        sys.stdout.write("\r[Client] ")
                         sys.stdout.write(data.decode("utf-8"))
+                        sys.stdout.flush()
+
+                        if readableData == "Hit!"
+
+                        if localBoard.ifHit(readableData):
+                            client_socket.send(("Hit!\n").encode("utf-8"))
+                            sys.stdout.write('[Me] ')
+                            sys.stdout.flush()
+                        else:
+                            client_socket.send(("Missed!\n").encode("utf-8"))
+                            sys.stdout.write('[Me] ')
+                            sys.stdout.flush()
+
                         sys.stdout.write('[Me] ')
                         sys.stdout.flush()
 
-                else:
+                else:           #ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS
                     # user entered a message
                     msg = sys.stdin.readline()
-                    client_socket.send(("\r[Server] " + msg).encode("utf-8"))
-                    sys.stdout.write('[Me] ')
-                    sys.stdout.flush()
+                    if str(msg) == "print\n":
+                        localBoard.print()
+                        sys.stdout.write('[Me] ')
+                        sys.stdout.flush()
+                    elif str(msg) == "oponent\n":
+                        clientBoard.print()
+                        sys.stdout.write('[Me] ')
+                        sys.stdout.flush()
+                    else:
+                        client_socket.send(msg.encode("utf-8"))
+                        sys.stdout.write('[Me] ')
+                        sys.stdout.flush()
 
         server_socket.close()
 
@@ -62,4 +91,4 @@ def chat_server():
         raise
 
 if __name__ == "__main__":
-    sys.exit(chat_server())
+    sys.exit(server())

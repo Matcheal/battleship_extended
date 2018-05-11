@@ -2,6 +2,8 @@ import sys
 from prettytable import PrettyTable
 
 EMPTY_SPACE = "_"
+SHIP_SYMBOL = "o"
+HIT_SYMBOL = "X"
 
 def xArray(symbol):
     list = [symbol]
@@ -50,14 +52,14 @@ class Board:
             # print(list(Board.dictionary.keys())[list(Board.dictionary.values()).index(0)])
             self.board.add_row(table[i])
 
-    def insertByCoor(self, coordinates, symbol = "o"):          #insert single character into the board with the given string
+    def insertByCoor(self, coordinates, symbol = SHIP_SYMBOL):          #insert single character into the board with the given string
         row, col = self.getSingleCoor(coordinates)
         self.board.clear_rows()
         self.table[row-1][col] = symbol if len(symbol) == 1 else symbol[0]
         self.fill(self.table)
         return True
 
-    def insert(self, row, col, symbol = "o"):                   #insert single character into the board with the given bearing(row, col)
+    def insert(self, row, col, symbol = SHIP_SYMBOL):                   #insert single character into the board with the given bearing(row, col)
         self.board.clear_rows()
         self.table[row-1][col] = symbol if len(symbol) == 1 else symbol[0]
         self.fill(self.table)
@@ -191,10 +193,16 @@ class Board:
                 return False
 
 
-    def initShips(self):                                        #initiates loading ships sequence
+    def initShips(self, command = None):                                        #initiates loading ships sequence
         print("Initiate the position of your ships, in the following order:\n1x 4 square ship, 2x 3 square ship, 3x 2 square ship, 4x 1 square ship.",
               "Enter the starting and ending coordinates of the ship, like in the following example: A1 A4 for 4 square ship. ")
         shipList = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+        if command == "ready":
+            coorList = ["A1 A4", "C1 C3", "H10 J10", "A6 A7", "E2 F2", "G5 G6", "A10", "J1", "J5", "I3"]
+            for i in range(10):
+                self.safeInsertShip(coorList[i], shipList[i])
+            return True
+
         for i in shipList:
             self.print()
             print("Enter " + str(i) + " square ship coordinates: ")
@@ -204,12 +212,34 @@ class Board:
                     break
         return True
 
+    def ifHit(self, coordinates):
+        row, col = self.getSingleCoor(coordinates)
+        if self.table[row-1][col] == SHIP_SYMBOL:
+            print("Hit!")
+            self.insert(row,col, HIT_SYMBOL)
+            return True
+        print("Missed!")
+        return False
 
-b = Board()
+    def ifEnd(self):
+        for row in self.table:
+            if SHIP_SYMBOL in row:
+                return False
+        # print("Game over, you WON!")
+        return True
+
+
+
+# b = Board()
 # b.safeInsertShip("C2 C4", 3)
 # b.print()
+# b.ifHit("C2")
+# b.ifHit("C3")
+# b.ifHit("C4")
+# b.print()
+# print(b.ifEnd())
 # b.safeInsertShip("B6 E6", 4)
 # b.print()
-
-if b.initShips():
-    b.print()
+#
+# if b.initShips("ready"):
+#     b.print()

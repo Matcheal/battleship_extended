@@ -4,7 +4,7 @@ import select
 import battleshipBoard
 
 
-def chat_client():
+def client():
     host = sys.argv[2] if len(sys.argv) > 2 else '127.0.0.1'
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 9009
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,8 +16,15 @@ def chat_client():
         print('Unable to connect')
         sys.exit()
     print('Connected to remote host. You can start sending messages')
+
+    serverBoard = battleshipBoard.Board()
+    localBoard = battleshipBoard.Board()
+    localBoard.initShips("ready")
+
     sys.stdout.write('[Me] ')
     sys.stdout.flush()
+
+
 
     while True:
         socket_list = [sys.stdin, s]
@@ -34,17 +41,44 @@ def chat_client():
                     sys.exit()
                 else:
                     # print data
+                    readableData = data.decode("utf-8")[0:-1]
+                    sys.stdout.write('\r[Server] ')
                     sys.stdout.write(data.decode("utf-8"))
+                    sys.stdout.flush()
+
+                    if localBoard.ifHit(readableData):
+                        s.send(("Hit!\n").encode("utf-8"))
+                        sys.stdout.write('[Me] ')
+                        sys.stdout.flush()
+                    else:
+                        s.send(("Missed!\n").encode("utf-8"))
+                        sys.stdout.write('[Me] ')
+                        sys.stdout.flush()
+
+
+
                     sys.stdout.write('[Me] ')
                     sys.stdout.flush()
+
+                    # print(data.decode("utf-8"))
+                    # print("lol")
 
             else:
                 # user entered a message
                 msg = sys.stdin.readline()
-                s.send(("\r[Client] " + msg).encode("utf-8"))
-                sys.stdout.write('[Me] ')
-                sys.stdout.flush()
+                if str(msg) == "print\n":
+                    localBoard.print()
+                    sys.stdout.write('[Me] ')
+                    sys.stdout.flush()
+                elif str(msg) == "oponent\n":
+                    serverBoard.print()
+                    sys.stdout.write('[Me] ')
+                    sys.stdout.flush()
+                else:
+                    s.send(msg.encode("utf-8"))
+                    sys.stdout.write('[Me] ')
+                    sys.stdout.flush()
 
 
 if __name__ == "__main__":
-    sys.exit(chat_client())
+    sys.exit(client())
