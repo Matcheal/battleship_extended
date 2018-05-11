@@ -1,6 +1,7 @@
 import sys
 import socket
 import select
+import battleshipBoard
 
 
 def chat_client():

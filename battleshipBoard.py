@@ -73,7 +73,7 @@ class Board:
         start, end = coordinates.split(" ")
         startRow, startCol = self.getSingleCoor(start)
         endRow, endCol = self.getSingleCoor(end)
-        return (startRow, startCol, endRow, endCol)
+        return startRow, startCol, endRow, endCol
 
     def checkSingleCoor(self, coordinates):                     #check validity of a single coordinates
         if coordinates[0].upper() not in Board.dictionary:
@@ -121,14 +121,31 @@ class Board:
                                                # (x != x2 or y != y2) and
                                                (1 <= x2 <= X) and
                                                (1 <= y2 <= Y))]
-        print(neighbours(row,col))
+        # print(neighbours(row,col))
         for coorTuple in neighbours(row,col):
             if self.table[coorTuple[0]-1][coorTuple[1]] != EMPTY_SPACE:
                 return False
         return True
 
-    # def checkShipAvailability(self, coordinates, length):
-
+    def checkShipAvailability(self, coorList, length):
+        startRow, startCol, endRow, endCol = coorList
+        if startRow == endRow:
+            if len(bipolarRange(startCol, endCol)) != length:
+                print("Wrong ship length!1")
+                return False
+            for i in bipolarRange(startCol, endCol):
+                if not self.checkPointAvailability(startRow, i):
+                    print("Too close to the next ship! Try somewhere else.")
+                    return False
+        else:
+            if len(bipolarRange(startRow, endRow)) != length:
+                print("Wrong ship length!")
+                return False
+            for i in bipolarRange(startRow, endRow):
+                if not self.checkPointAvailability(i, startCol):
+                    print("Too close to the next ship! Try somewhere else.")
+                    return False
+        return True
 
 
 
@@ -154,7 +171,7 @@ class Board:
             return False
         if length == 1 and (len(coordinates) == 2 or len(coordinates) == 3):
             row, col = self.getSingleCoor(coordinates)
-            if self.checkPointAvailability(row,col):
+            if self.checkPointAvailability(row, col):
                 self.insert(row,col)
                 return True
             else:
@@ -167,57 +184,32 @@ class Board:
             print("Wrong coordinates format!")
             return False
         else:
+            if self.checkShipAvailability(self.getDoubleCoor(coordinates), length):
+                self.insertShip(self.getDoubleCoor(coordinates), length)
+                return True
+            else:
+                return False
 
-            self.insertShip(self.getDoubleCoor(coordinates),length)
-            return True
-            # startRow, startCol, endRow, endCol = self.getDoubleCoor(coordinates)
-            # if startRow == endRow:
-            #     if startCol < endCol:
-            #         if len(range(startCol, endCol + 1)) != length:
-            #             print("Wrong ship length!")
-            #             return False
-            #         for i in range(startCol, endCol + 1):
-            #             self.insert(startRow, i)
-            #     elif startCol > endCol:
-            #         if len(range(endCol, startCol + 1)) != length:
-            #             print("Wrong ship length!")
-            #             return False
-            #         for i in range(endCol, startCol + 1):
-            #             self.insert(startRow, i)
-            # elif startCol == endCol:
-            #     if startRow < endRow:
-            #         if len(range(startRow, endRow + 1)) != length:
-            #             print("Wrong ship length!")
-            #             return False
-            #         for i in range(startRow, endRow + 1):
-            #             self.insert(i, startCol)
-            #     elif startRow > endRow:
-            #         if len(range(endRow, startRow + 1)) != length:
-            #             print("Wrong ship length!")
-            #             return False
-            #         for i in range(endRow, startRow + 1):
-            #             self.insert(i, startCol)
-            # return True
 
     def initShips(self):                                        #initiates loading ships sequence
         print("Initiate the position of your ships, in the following order:\n1x 4 square ship, 2x 3 square ship, 3x 2 square ship, 4x 1 square ship.",
               "Enter the starting and ending coordinates of the ship, like in the following example: A1 A4 for 4 square ship. ")
         shipList = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
         for i in shipList:
+            self.print()
             print("Enter " + str(i) + " square ship coordinates: ")
             while(True):
                 coordinates = input()
                 if self.safeInsertShip(coordinates, i):
                     break
+        return True
 
 
 b = Board()
-b.print()
-b.insert(1,2)
-# b.insertByCoor("A1")
-# b.initShips()
-print(b.safeInsertShip("b1", 1))
-b.print()
-# print(b.checkPointAvailability(2,2))
+# b.safeInsertShip("C2 C4", 3)
+# b.print()
+# b.safeInsertShip("B6 E6", 4)
+# b.print()
 
-# print(b.table)
+if b.initShips():
+    b.print()
