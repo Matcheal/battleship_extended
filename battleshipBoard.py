@@ -4,6 +4,7 @@ from prettytable import PrettyTable
 EMPTY_SPACE = "_"
 SHIP_SYMBOL = "o"
 HIT_SYMBOL = "X"
+MISSED_SYMBOL = "M"
 
 def xArray(symbol):
     list = [symbol]
@@ -41,8 +42,10 @@ class Board:
         self.table = xxArray()
         self.fill(self.table)
         self.board._set_hrules(0)
+        self.yourTurn = True
         # self.board.set_style(12)
         # self.board._set_padding_width(1)
+
 
     def print(self):                                            #print board
         print(self.board)
@@ -133,7 +136,7 @@ class Board:
         startRow, startCol, endRow, endCol = coorList
         if startRow == endRow:
             if len(bipolarRange(startCol, endCol)) != length:
-                print("Wrong ship length!1")
+                print("Wrong ship length!")
                 return False
             for i in bipolarRange(startCol, endCol):
                 if not self.checkPointAvailability(startRow, i):
@@ -155,7 +158,7 @@ class Board:
         startRow, startCol, endRow, endCol = coorList
         if startRow == endRow:
             if len(bipolarRange(startCol, endCol)) != length:
-                print("Wrong ship length!1")
+                print("Wrong ship length!")
                 return False
             for i in bipolarRange(startCol, endCol):
                 self.insert(startRow, i)
@@ -202,15 +205,28 @@ class Board:
             for i in range(10):
                 self.safeInsertShip(coorList[i], shipList[i])
             return True
-
-        for i in shipList:
-            self.print()
-            print("Enter " + str(i) + " square ship coordinates: ")
-            while(True):
-                coordinates = input()
-                if self.safeInsertShip(coordinates, i):
-                    break
-        return True
+        elif command == "two":
+            self.safeInsertShip("A2", 1)
+            self.safeInsertShip("A4", 1)
+            return True
+        elif command == "short":
+            for i in [2, 1]:
+                self.print()
+                print("Enter " + str(i) + " square ship coordinates: ")
+                while(True):
+                    coordinates = input()
+                    if self.safeInsertShip(coordinates, i):
+                        break
+            return True
+        else:
+            for i in shipList:
+                self.print()
+                print("Enter " + str(i) + " square ship coordinates: ")
+                while(True):
+                    coordinates = input()
+                    if self.safeInsertShip(coordinates, i):
+                        break
+            return True
 
     def ifHit(self, coordinates):
         row, col = self.getSingleCoor(coordinates)
@@ -221,12 +237,14 @@ class Board:
         print("Missed!")
         return False
 
-    def ifEnd(self):
+    def countSymbols(self, symbol = SHIP_SYMBOL):
+        count = 0
         for row in self.table:
-            if SHIP_SYMBOL in row:
-                return False
+            for elem in row:
+                if elem == symbol:
+                    count +=1
         # print("Game over, you WON!")
-        return True
+        return count
 
 
 

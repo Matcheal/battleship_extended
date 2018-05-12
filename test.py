@@ -1,2 +1,3 @@
-word = "123456\n"
-print(word[0:-1])
+lista = [2,3]
+lista.pop()
+print(lista[1])

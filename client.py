@@ -17,14 +17,15 @@ def client():
         sys.exit()
     print('Connected to remote host. You can start sending messages')
 
-    serverBoard = battleshipBoard.Board()
+    oponentBoard = battleshipBoard.Board()
     localBoard = battleshipBoard.Board()
-    localBoard.initShips("ready")
+    localBoard.initShips("short")
+    lastGuessStack = list()
+    s.send(("Opponent ready!\n").encode("utf-8"))
+    print("Wait for your opponent to initiate their's ships.")
 
     sys.stdout.write('[Me] ')
     sys.stdout.flush()
-
-
 
     while True:
         socket_list = [sys.stdin, s]
@@ -39,43 +40,56 @@ def client():
                 if not data:
                     print('\nDisconnected from server')
                     sys.exit()
-                else:
+                else:  # ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT
                     # print data
                     readableData = data.decode("utf-8")[0:-1]
-                    sys.stdout.write('\r[Server] ')
+                    sys.stdout.write("\r[Opponent] ")
                     sys.stdout.write(data.decode("utf-8"))
                     sys.stdout.flush()
 
-                    if localBoard.ifHit(readableData):
-                        s.send(("Hit!\n").encode("utf-8"))
-                        sys.stdout.write('[Me] ')
-                        sys.stdout.flush()
+                    if readableData == "Hit!":
+                        oponentBoard.insertByCoor(lastGuessStack.pop(), battleshipBoard.HIT_SYMBOL)
+                    elif readableData == "Missed!":
+                        oponentBoard.insertByCoor(lastGuessStack.pop(), battleshipBoard.MISSED_SYMBOL)
+                    elif readableData == "Game over.":
+                        print("You WON!")
+                        exit()
+                    elif readableData == "Opponent ready!":
+                        continue
                     else:
-                        s.send(("Missed!\n").encode("utf-8"))
-                        sys.stdout.write('[Me] ')
-                        sys.stdout.flush()
+                        if localBoard.ifHit(readableData):
+                            s.send(("Hit!\n").encode("utf-8"))
+                            if localBoard.countSymbols(battleshipBoard.SHIP_SYMBOL) == 0:
+                                print("End of game, You LOST!")
+                                s.send(("Game over.\n").encode("utf-8"))
 
-
-
+                        else:
+                            s.send(("Missed!\n").encode("utf-8"))
+                        print("-->Your turn!")
+                        localBoard.yourTurn = True
                     sys.stdout.write('[Me] ')
                     sys.stdout.flush()
 
-                    # print(data.decode("utf-8"))
-                    # print("lol")
-
-            else:
+            else:  # ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS
                 # user entered a message
                 msg = sys.stdin.readline()
-                if str(msg) == "print\n":
+
+                if str(msg) == "player\n":
                     localBoard.print()
                     sys.stdout.write('[Me] ')
                     sys.stdout.flush()
-                elif str(msg) == "oponent\n":
-                    serverBoard.print()
+                elif str(msg) == "opponent\n":
+                    oponentBoard.print()
                     sys.stdout.write('[Me] ')
                     sys.stdout.flush()
                 else:
-                    s.send(msg.encode("utf-8"))
+                    if oponentBoard.validCoor(msg):
+                        if localBoard.yourTurn:
+                            s.send(msg.encode("utf-8"))
+                            lastGuessStack.append(msg)  # w celu ustalenia kolejnosci
+                            localBoard.yourTurn = False
+                        else:
+                            print("Wait for your turn!")
                     sys.stdout.write('[Me] ')
                     sys.stdout.flush()
 
