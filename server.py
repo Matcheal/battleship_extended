@@ -9,7 +9,7 @@ PORT = 9009
 
 def server():
     try:
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)                       #tworzenie socketu servera
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((HOST, PORT))
         server_socket.listen(1)
@@ -18,15 +18,15 @@ def server():
         # SOCKET_LIST.append(server_socket)
 
         print("Battleship server started on port  " + str(PORT))
-        client_socket, addr = server_socket.accept()
+        client_socket, addr = server_socket.accept()                                            #akceptowanie połączenia z klientem
         print("Client " + str(addr) + " connected")
-        socket_list = [sys.stdin, client_socket]
+        socket_list = [sys.stdin, client_socket]                                                #lista socketów do metody select()
 
-        oponentBoard = battleshipBoard.Board()
-        localBoard = battleshipBoard.Board()
-        localBoard.initShips("short")
-        lastGuessStack = list()
-        client_socket.send(("Opponent ready!\n").encode("utf-8"))
+        oponentBoard = battleshipBoard.Board()                                                  #inicjalizacja planszy przeciwnika
+        localBoard = battleshipBoard.Board()                                                    #inicjalizacja planszy gracza
+        localBoard.initShips("short")                                                           #wpisanie położenia statków gracza
+        lastGuessStack = list()                                                                 #stos przechowujący ostatnie zgadywane położenie
+        client_socket.send(("Opponent ready!\n").encode("utf-8"))                               #wyślij wiadomość gotowości do przeciwnika
 
         print("Wait for your opponent to initiate their's ships.")
 
@@ -35,7 +35,7 @@ def server():
             # get the list sockets which are ready to be read through select
             # 4th arg, time_out  = 0 : poll and never block
 
-            ready_to_read, ready_to_write, in_error = select.select(socket_list, [], [], 0)
+            ready_to_read, ready_to_write, in_error = select.select(socket_list, [], [], 0)     #wybieranie albo gniazdo klienta lub std.input
 
             for sock in ready_to_read:
                 if sock == client_socket:
@@ -44,7 +44,7 @@ def server():
                     if not data:
                         print('\nDisconnected from server')
                         sys.exit()
-                    else:  # ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT__ODCZYT
+                    else:                                                                       # ODCZYT, obsługa odczytu wiadomości
                         # print data
                         readableData = data.decode("utf-8")[0:-1]
                         sys.stdout.write("\r[Opponent] ")
@@ -75,7 +75,7 @@ def server():
                         sys.stdout.write('[Me] ')
                         sys.stdout.flush()
 
-                else:  # ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS__ZAPIS
+                else:                                                                           # ZAPIS, obsługa wysyłanej wiadomości
                     # user entered a message
                     msg = sys.stdin.readline()
 
