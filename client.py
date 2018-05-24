@@ -5,21 +5,42 @@ import battleshipBoard
 
 
 def client():
-    host = sys.argv[2] if len(sys.argv) > 2 else '127.0.0.1'
+
+    host = sys.argv[2] if len(sys.argv) > 2 else 'localhost'
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 9009
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(2)
-    # connect to remote host
+
     try:
-        s.connect((host, port))
-    except:
-        print('Unable to connect')
+        sInfo = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.SOL_TCP)
+    except Exception as e:
+        print("getaddrinfo error: ", e)
         sys.exit()
+    s = None
+    for interface in reversed(sInfo):
+        try:
+            s = socket.socket(interface[0], interface[1])  # tworzenie socketu servera
+            s.settimeout(2)
+            s.connect(interface[4])
+
+            print(interface[0], interface[4])
+            break
+        except:
+            s.close()
+            continue
+    if not s:
+        print("Could not create client socket, exiting.")
+        sys.exit()
+
+    # connect to remote host
+    # try:
+    #     s.connect((host, port))
+    # except:
+    #     print('Unable to connect')
+    #     sys.exit()
     print('Connected to remote host. You can start playing.')
 
     oponentBoard = battleshipBoard.Board()
     localBoard = battleshipBoard.Board()
-    localBoard.initShips("short")
+    localBoard.initShips("ready")
     lastGuessStack = list()
     s.send(("Opponent ready!\n").encode("utf-8"))
     print("Wait for your opponent to initiate their's ships.")
