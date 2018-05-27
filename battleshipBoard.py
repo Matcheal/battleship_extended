@@ -1,4 +1,4 @@
-import sys
+import sys, syslog, random
 from prettytable import PrettyTable
 
 EMPTY_SPACE = "_"
@@ -35,6 +35,7 @@ def bipolarRange(start, stop):
 
 class Board:
     dictionary = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "I": 9, "J": 10}
+    reverseDict = lambda idx: list(Board.dictionary.keys())[list(Board.dictionary.values()).index(idx)]
     def __init__(self):
         fieldNamesRow = (" ", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
         self.board = PrettyTable()
@@ -49,6 +50,13 @@ class Board:
 
     def print(self):                                            #print board
         print(self.board)
+
+    def syslogBoardState(self):
+        lines = self.board.get_string().split("\n")
+        for i in lines:
+            syslog.syslog(syslog.LOG_INFO, i)
+            # print(i)
+
 
     def fill(self, table):                                      #fill the table representing the board
         for i in range(10):
@@ -82,6 +90,7 @@ class Board:
 
     def checkSingleCoor(self, coordinates):                     #check validity of a single coordinates
         if coordinates[0].upper() not in Board.dictionary:
+            print("Values out of bounds! Try range from: A - J, 1 - 10")
             return False
         coordinatesRow = Board.dictionary[coordinates[0].upper()]
         try:
@@ -90,6 +99,7 @@ class Board:
             print("Wrong value! Try again.")
             return False
         if (coordinatesRow < 1 or coordinatesRow > 10) or (coordinatesCol < 1 or coordinatesCol > 10):
+            print("Values out of bounds! Try range from: A - J, 1 - 10")
             return False
         return True
 
@@ -195,6 +205,51 @@ class Board:
             else:
                 return False
 
+    def randomShipCoor(self, shipLength):
+        while True:
+            xPosition = random.randint(1, 10)
+            yPosition = random.randint(1, 10)
+            coor = list()
+            if shipLength == 1:
+                if self.checkPointAvailability(yPosition, xPosition):
+                    strCoor = "{}{}".format(Board.reverseDict(yPosition), xPosition)
+                    break
+            else:
+                direction = random.randint(0, 3)
+                if direction == 0:
+                    thirdPosition = yPosition - (shipLength - 1)
+                    if  thirdPosition < 1:
+                        continue
+                    else:
+                        coor = [thirdPosition, xPosition, yPosition, xPosition]
+                elif direction == 2:
+                    thirdPosition = yPosition + (shipLength - 1)
+                    if  thirdPosition > 10:
+                        continue
+                    else:
+                        coor = [yPosition, xPosition, thirdPosition, xPosition]
+
+                elif direction == 1:
+                    thirdPosition = xPosition + (shipLength - 1)
+                    if  thirdPosition > 10:
+                        continue
+                    else:
+                        coor = [yPosition, xPosition, yPosition, thirdPosition]
+                elif direction == 1:
+                    thirdPosition = xPosition - (shipLength - 1)
+                    if thirdPosition < 1:
+                        continue
+                    else:
+                        coor = [yPosition, thirdPosition, yPosition, xPosition]
+                if coor:
+                    if self.checkShipAvailability( coor, shipLength):
+                        strCoor = "{}{} {}{}".format(Board.reverseDict(coor[0]), coor[1], Board.reverseDict(coor[2]),coor[3])
+                        break
+                else:
+                    continue
+
+        print(strCoor)
+        return strCoor
 
     def initShips(self, command = None):                                        #initiates loading ships sequence
         print("Initiate the position of your ships, in the following order:\n1x 4 square ship, 2x 3 square ship, 3x 2 square ship, 4x 1 square ship.",
@@ -218,6 +273,9 @@ class Board:
                     if self.safeInsertShip(coordinates, i):
                         break
             return True
+        elif command == "random":
+            for shipLen in shipList:
+                self.safeInsertShip(self.randomShipCoor(shipLen), shipLen)
         else:
             for i in shipList:
                 self.print()
