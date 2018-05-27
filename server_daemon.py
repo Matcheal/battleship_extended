@@ -10,21 +10,6 @@ RECV_BUFFER = 4096
 
 
 class Server(Daemon):
-    def respond(self):
-        while True:
-            xPosition = random.randint(1, 10)
-            yPosition = random.randint(1, 10)
-            coor = str(list(battleshipBoard.Board.dictionary.keys())[list(battleshipBoard.Board.dictionary.values()).index(yPosition)]) + str(xPosition) + "\n"
-            if self.oponentBoard.validCoor(coor.rstrip()) and coor not in self.guessStack:
-                break
-
-        if self.localBoard.yourTurn:
-            self.client_socket.send(coor.encode("utf-8"))
-            self.lastGuessStack.append(coor)  # w celu ustalenia kolejnosci
-            self.guessStack.append((coor))
-            self.localBoard.yourTurn = False
-        return coor
-
     def __init__(self, pidfile):
         super(Server, self).__init__(pidfile)
         port = int(sys.argv[2]) if len(sys.argv) == 3 else 9009
@@ -68,6 +53,7 @@ class Server(Daemon):
         except:
             print("Unexpected error:", sys.exc_info()[0])
             raise
+
 
 
      # DAEMON START
@@ -118,10 +104,24 @@ class Server(Daemon):
 
         self.server_socket.close()
 
+    def respond(self):
+        while True:
+            xPosition = random.randint(1, 10)
+            yPosition = random.randint(1, 10)
+            coor = str(list(battleshipBoard.Board.dictionary.keys())[list(battleshipBoard.Board.dictionary.values()).index(yPosition)]) + str(xPosition) + "\n"
+            if self.oponentBoard.validCoor(coor.rstrip()) and coor not in self.guessStack:
+                break
+
+        if self.localBoard.yourTurn:
+            self.client_socket.send(coor.encode("utf-8"))
+            self.lastGuessStack.append(coor)  # w celu ustalenia kolejnosci
+            self.guessStack.append((coor))
+            self.localBoard.yourTurn = False
+        return coor
 
 if __name__ == "__main__":
         daemon = Server('/tmp/server-daemon.pid')
-        if len(sys.argv) == 2:
+        if len(sys.argv) == 3 or len(sys.argv) == 2:
                 if 'start' == sys.argv[1]:
                         daemon.start()
                 elif 'stop' == sys.argv[1]:
