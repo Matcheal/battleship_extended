@@ -1,5 +1,6 @@
 import battleshipBoard
 import syslog
+import os
 board = battleshipBoard.Board()
 
 # syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_NOTICE))
@@ -7,11 +8,8 @@ board = battleshipBoard.Board()
 # syslog.syslog('kawa')
 # board.syslogBoardState()
 # syslog.closelog()
-
-print(battleshipBoard.Board.reverseDict(2))
-lista = [1,2,3,4]
-strCoor = "{}{} {}{}".format(1, 2, 3, 4)
-print(strCoor)
+#
+print(os.sysconf("SC_OPEN_MAX"))
 
 
 

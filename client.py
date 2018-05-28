@@ -34,7 +34,7 @@ class Client():
 
         oponentBoard = battleshipBoard.Board()
         localBoard = battleshipBoard.Board()
-        localBoard.initShips("random")
+        localBoard.initShips("short")
         lastGuessStack = list()
         s.send(("Opponent ready!\n").encode("utf-8"))
         print("Wait for your opponent to initiate their's ships.")
@@ -109,6 +109,6 @@ class Client():
                         sys.stdout.flush()
     except KeyboardInterrupt:
         print("Ctrl+C entered, closing connection.")
-        client_socket.close()
+        self.client_socket.close()
 
 instance = Client()

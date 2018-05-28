@@ -1,36 +1,39 @@
-"""Generic linux daemon base class for python 3.x."""
-
-import sys, os, time, atexit, signal
+import sys
+import os
+import time
+import atexit
+import signal
 
 
 class Daemon:
-    """A generic daemon class.
-
-    Usage: subclass the daemon class and override the run() method."""
+    """Usage: subclass the daemon class and override the run() method."""
 
     def __init__(self, pidfile):
-        self.pidfile = pidfile
+        self.pidfile = pidfile                                          #podana sciezka do utworzenia pliku pidfile
 
-    def daemonize(self):
+    def daemonize(self):                                                #metoda do inicjalizacji demona
         """Deamonize class. UNIX double fork mechanism."""
 
         try:
-            pid = os.fork()
-            if pid > 0:
-                # exit first parent
+            pid = os.fork()                                             #pierwszy fork, proces potonmy działa w tle,
+            if pid > 0:                                                 #proces dziedziczy identyfikator grupy ale otrzymuje swój własny PID
+                # exit first parent                                     #pewnosc, ze proces nie jest przywodca grupy procesow
                 sys.exit(0)
         except OSError as err:
             sys.stderr.write('fork #1 failed: {0}\n'.format(err))
             sys.exit(1)
 
         # decouple from parent environment
-        os.chdir('/')
-        os.setsid()
-        os.umask(0)
+        os.chdir('/')                                                   #zmiana katalogu roboczego
 
+        os.setsid()                                                     #utworzenie nowej sesji, proces staje sie przywodca nowej grupy procesow, bez terminala sterujacego
+
+        os.umask(0)                                                     #zerowanie maski trybu dostepu do tworzonych plikow
+
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)                    #ignorujemy sygnal SIGHUP, poniewaz jest on wysylany do potomkow po zamknieciu przywodcy sesji
         # do second fork
         try:
-            pid = os.fork()
+            pid = os.fork()                                             #zamykamy proces macierzysty; zapobiegamy automatycznegou uzyskaniu terminala sterujacego przez nasz proces
             if pid > 0:
                 # exit from second parent
                 sys.exit(0)
@@ -48,6 +51,8 @@ class Daemon:
         os.dup2(si.fileno(), sys.stdin.fileno())
         os.dup2(so.fileno(), sys.stdout.fileno())
         os.dup2(se.fileno(), sys.stderr.fileno())
+
+        os.setuid(1000)                                                  #zmiana właściciela procesu
 
         # write pidfile
         atexit.register(self.delpid)

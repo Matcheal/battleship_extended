@@ -5,8 +5,10 @@ import random
 from daemon import Daemon
 import syslog
 import time
+import os
 
 RECV_BUFFER = 4096
+MAXFD = 64
 
 
 class Server(Daemon):
@@ -54,6 +56,53 @@ class Server(Daemon):
             print("Unexpected error:", sys.exc_info()[0])
             raise
 
+    def daemonize(self, uid, noDelSock):                                                #metoda do inicjalizacji demona
+        """Deamonize class. UNIX double fork mechanism."""
+
+        try:
+            pid = os.fork()                                             #pierwszy fork, proces potonmy działa w tle,
+            if pid > 0:                                                 #proces dziedziczy identyfikator grupy ale otrzymuje swój własny PID
+                # exit first parent                                     #pewnosc, ze proces nie jest przywodca grupy procesow
+                sys.exit(0)
+        except OSError as err:
+            sys.stderr.write('fork #1 failed: {0}\n'.format(err))
+            sys.exit(1)
+
+        # decouple from parent environment
+        os.chdir('/')                                                   #zmiana katalogu roboczego
+
+        os.setsid()                                                     #utworzenie nowej sesji, proces staje sie przywodca nowej grupy procesow, bez terminala sterujacego
+
+        os.umask(0)                                                     #zerowanie maski trybu dostepu do tworzonych plikow
+
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)                    #ignorujemy sygnal SIGHUP, poniewaz jest on wysylany do potomkow po zamknieciu przywodcy sesji
+        # do second fork
+        try:
+            pid = os.fork()                                             #zamykamy proces macierzysty; zapobiegamy automatycznegou uzyskaniu terminala sterujacego przez nasz proces
+            if pid > 0:
+                # exit from second parent
+                sys.exit(0)
+        except OSError as err:
+            sys.stderr.write('fork #2 failed: {0}\n'.format(err))
+            sys.exit(1)
+
+        for i in range(MAXFD):
+            if noDelSock!=i:
+                socket.close
+
+
+        # redirect standard file descriptors
+        sys.stdout.flush()
+        sys.stderr.flush()
+        si = open(os.devnull, 'r')
+        so = open(os.devnull, 'a+')
+        se = open(os.devnull, 'a+')
+
+        os.dup2(si.fileno(), sys.stdin.fileno())
+        os.dup2(so.fileno(), sys.stdout.fileno())
+        os.dup2(se.fileno(), sys.stderr.fileno())
+
+        os.setuid(uid)                                                  #zmiana właściciela procesu
 
 
      # DAEMON START
