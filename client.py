@@ -10,12 +10,12 @@ class Client():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 9009
     try:
         try:
-            sInfo = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.SOL_TCP)
+            sInfo = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM, socket.SOL_TCP)            #zwraca info odnosnie dostepnych interfaceow, dla TCP i podanego PORTu
         except Exception as e:
             print("getaddrinfo error: ", e)
             sys.exit()
         s = None
-        for interface in reversed(sInfo):
+        for interface in reversed(sInfo):                                                                #wybieramy pierwszy od tylu, ktorym jest IPv4, localhost
             try:
                 s = socket.socket(interface[0], interface[1])  # tworzenie socketu servera
                 s.settimeout(2)
@@ -34,7 +34,7 @@ class Client():
 
         oponentBoard = battleshipBoard.Board()
         localBoard = battleshipBoard.Board()
-        localBoard.initShips("short")
+        localBoard.initShips("ready")
         lastGuessStack = list()
         s.send(("Opponent ready!\n").encode("utf-8"))
         print("Wait for your opponent to initiate their's ships.")
@@ -64,21 +64,27 @@ class Client():
 
                         if readableData == "Hit!":
                             oponentBoard.insertByCoor(lastGuessStack.pop(), battleshipBoard.HIT_SYMBOL)
+                            localBoard.yourTurn = True
+                            print("[Me] My turn again.")
                         elif readableData == "Missed!":
                             oponentBoard.insertByCoor(lastGuessStack.pop(), battleshipBoard.MISSED_SYMBOL)
                         elif readableData == "Game over.":
                             print("You WON!")
                             exit()
                         elif readableData == "Opponent ready!":
+                            print("Write your guess coordinates to start the game.\n")
                             continue
                         else:
                             if localBoard.ifHit(readableData):
+                                print("[Me] Hit!")
                                 s.send(("Hit!\n").encode("utf-8"))
                                 if localBoard.countSymbols(battleshipBoard.SHIP_SYMBOL) == 0:
                                     print("End of game, You LOST!")
                                     s.send(("Game over.\n").encode("utf-8"))
+                                continue                                                        # ADDED
 
                             else:
+                                print("[Me] Missed!")
                                 s.send(("Missed!\n").encode("utf-8"))
                             print("-->Your turn!")
                             localBoard.yourTurn = True
@@ -109,6 +115,6 @@ class Client():
                         sys.stdout.flush()
     except KeyboardInterrupt:
         print("Ctrl+C entered, closing connection.")
-        self.client_socket.close()
+        s.close()
 
 instance = Client()

@@ -51,6 +51,8 @@ class Board:
     def print(self):                                            #print board
         print(self.board)
 
+    """ NEW  NEW  NEW  NEW  NEW  NEW  NEW  """
+
     def syslogBoardState(self):
         lines = self.board.get_string().split("\n")
         for i in lines:
@@ -205,6 +207,7 @@ class Board:
             else:
                 return False
 
+
     def randomShipCoor(self, shipLength):
         while True:
             xPosition = random.randint(1, 10)
@@ -266,33 +269,34 @@ class Board:
             return True
         elif command == "short":
             for i in [2, 1]:
-                self.print()
+
                 print("Enter " + str(i) + " square ship coordinates: ")
                 while(True):
                     coordinates = input()
                     if self.safeInsertShip(coordinates, i):
                         break
+                self.print()
             return True
         elif command == "random":
             for shipLen in shipList:
                 self.safeInsertShip(self.randomShipCoor(shipLen), shipLen)
         else:
             for i in shipList:
-                self.print()
                 print("Enter " + str(i) + " square ship coordinates: ")
                 while(True):
                     coordinates = input()
                     if self.safeInsertShip(coordinates, i):
                         break
+                self.print()
             return True
 
     def ifHit(self, coordinates):
         row, col = self.getSingleCoor(coordinates)
         if self.table[row-1][col] == SHIP_SYMBOL:
-            print("Hit!")
+            # print("[Me] Hit!")
             self.insert(row,col, HIT_SYMBOL)
             return True
-        print("Missed!")
+        # print("[Me] Missed!")
         return False
 
     def countSymbols(self, symbol = SHIP_SYMBOL):
@@ -304,18 +308,3 @@ class Board:
         # print("Game over, you WON!")
         return count
 
-
-
-# b = Board()
-# b.safeInsertShip("C2 C4", 3)
-# b.print()
-# b.ifHit("C2")
-# b.ifHit("C3")
-# b.ifHit("C4")
-# b.print()
-# print(b.ifEnd())
-# b.safeInsertShip("B6 E6", 4)
-# b.print()
-#
-# if b.initShips("ready"):
-#     b.print()
